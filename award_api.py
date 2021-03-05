@@ -1,5 +1,6 @@
 import requests
 import time
+import sys
 
 
 class NIHAwardAPI:
@@ -48,6 +49,24 @@ class NIHAwardAPI:
         r = requests.get(url)
         return r.json()['totalPages']
 
+    @staticmethod
+    def progress(count, total, status=''):
+        """
+        A small progress bar to keep track of function status throughout the list building process.
+        :param count: the count that is currently being run of the total
+        :param total: the total count that we will reach
+        :param status: a given status message to display next to the progress bar
+        :return:
+        """
+        bar_len = 60
+        filled_len = int(round(bar_len * count / float(total)))
+
+        percents = round(100.0 * count / float(total), 1)
+        bar = '=' * filled_len + '-' * (bar_len - filled_len)
+
+        sys.stdout.write('[%s] %s%s ...%s\r' % (bar, percents, '%', status))
+        sys.stdout.flush()
+
     def construct_list(self, param_dict):
         """
         Takes in the parameter dictionary and:
@@ -69,7 +88,9 @@ class NIHAwardAPI:
         offset = 1
         limit = 50
         curr_page = 1
+        # sys.stdout.write('Building award list...')
         while curr_page <= pages:
+            self.progress(curr_page, pages, status='Building award list')
             call = self.url_construct(self.base_url, self.search_start, param_dict, offset=offset, limit=limit)
             r = requests.get(call)
             awards = r.json()['items']
